@@ -1,4 +1,4 @@
-import java.io.PrintWriter
+import java.io.{FileNotFoundException, IOException, PrintWriter}
 import java.net.ServerSocket
 
 import org.apache.spark.{SparkConf, SparkContext}
@@ -14,7 +14,7 @@ class AppMainTest {
 
     //    PV
 
-    //    UV
+    UV
 
     //    TopN
   }
@@ -48,20 +48,29 @@ object PV extends AppMainTest {
 
 object UV extends AppMainTest {
 
-  private val sparkConf: SparkConf = new SparkConf().setAppName("UV").setMaster("local[2]")
+  try {
 
-  private val sparkContext: SparkContext = new SparkContext(sparkConf)
+    val sparkConf: SparkConf = new SparkConf().setAppName("UV").setMaster("local[2]")
 
-  sparkContext.setLogLevel("WARN")
+    val sparkContext: SparkContext = new SparkContext(sparkConf)
 
-  private val dataRDD: RDD[String] = sparkContext.textFile("/Users/lionyan/Desktop/ScalaStudy/20190522.txt")
+    sparkContext.setLogLevel("WARN")
 
-  private val ips: RDD[String] = dataRDD.map(_.split("insert")(0))
+    val dataRDD: RDD[String] = sparkContext.textFile("/Users/lionyan/Desktop/SparkDemo/20190814.txt")
 
-  private val ipNum: Long = ips.distinct().count()
+    val ips: RDD[String] = dataRDD.map(_.split("http")(0))
 
-  println(ipNum)
+    val ipNum: Long = ips.distinct().count()
 
+    println(ipNum)
+  } catch {
+    case ex: FileNotFoundException => {
+      println("Missing file exception")
+    }
+    case ex: IOException => {
+      println("IO Exception")
+    }
+  }
   //  sparkContext.stop()
 }
 
@@ -72,19 +81,33 @@ object TopN extends AppMainTest {
   private val sc: SparkContext = new SparkContext(sparkConf)
   //设置输出的日志级别
   sc.setLogLevel("WARN")
-  //读取日志数据
-  private val dataRDD: RDD[String] = sc.textFile("C:/Users/Administrator/Desktop/ScalaStudy/20190522.txt")
-  //对每一行的日志信息进行切分并且过滤清洗掉不符合规则的数据
-  //通过对日志信息的分析，我们知道按照空格切分后，下标为10的是url，长度小于10的暂且认为是不符合规则的数据
-  private val urlAndOne: RDD[(String, Int)] = dataRDD.filter(_.split("insert").size > 10).map(x => (x.split(" ")(10), 1))
-  //相同url进行累加
-  private val result: RDD[(String, Int)] = urlAndOne.reduceByKey(_ + _)
-  //访问最多的url并进行倒叙排序
-  private val sortResult: RDD[(String, Int)] = result.sortBy(_._2, false)
-  //取前五位
-  private val finalResult: Array[(String, Int)] = sortResult.take(5)
-  //打印输出
-  finalResult.foreach(println)
+
+  try {
+    //读取日志数据
+    val dataRDD: RDD[String] = sc.textFile("/Users/lionyan/Desktop/SparkDemo/20190814.txt")
+    print("RDD")
+    //        //对每一行的日志信息进行切分并且过滤清洗掉不符合规则的数据
+    //        //通过对日志信息的分析，我们知道按照空格切分后，下标为10的是url，长度小于10的暂且认为是不符合规则的数据
+    val urlAndOne: RDD[(String, Int)] = dataRDD.filter(_.split("http").size > 10).map(x => (x.split(" ")(10), 1))
+    //        //相同url进行累加
+    val result: RDD[(String, Int)] = urlAndOne.reduceByKey(_ + _)
+    //        //访问最多的url并进行倒叙排序
+    val sortResult: RDD[(String, Int)] = result.sortBy(_._1, false)
+    //        //取前五位
+    val finalResult: Array[(String, Int)] = sortResult.take(5)
+    //    //打印输出
+    finalResult.foreach(println)
+
+  } catch {
+    case ex: FileNotFoundException => {
+      println("Missing file exception")
+    }
+    case ex: IOException => {
+      println("IO Exception")
+    }
+  }
+
+
   sc.stop()
 }
 
@@ -128,15 +151,15 @@ object GenerateChar {
   }
 }
 
-object ScoketStreaming {
-  def main(args: Array[String]){
-    val conf = new SparkConf().setMaster("local[2]").setAppName("socketStreaming")
-    val sc = new StreamingContext(conf,Seconds(1))
-    val lines = sc.socketTextStream("master", 9998)
-    val words = lines.flatMap(_.split(" "))
-    val wordCount = words.map(x => (x, 1)).reduceByKey(_ + _);
-    wordCount.print()
-    sc.start()
-    sc.awaitTermination()
-  }
-}
+//object ScoketStreaming {
+//  def main(args: Array[String]){
+//    val conf = new SparkConf().setMaster("local[2]").setAppName("socketStreaming")
+//    val sc = new StreamingContext(conf,Seconds(2))
+//    val lines = sc.socketTextStream("master", 9998)
+//    val words = lines.flatMap(_.split(" "))
+//    val wordCount = words.map(x => (x, 1)).reduceByKey(_ + _);
+//    wordCount.print()
+//    sc.start()
+//    sc.awaitTermination()
+//  }
+//}
