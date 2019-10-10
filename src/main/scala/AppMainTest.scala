@@ -3,12 +3,12 @@ import java.net.ServerSocket
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.StreamingContext
-import org.scalatest.time.Seconds
+//import org.apache.spark.streaming.StreamingContext
+//import org.scalatest.time.Seconds
 
 class AppMainTest {
 
-  def main(args: Array[String]): Unit = {
+//  def main(args: Array[String]): Unit = {
 
     val textFieldUrl = "/Users/lionyan/Desktop/ScalaStudy/20181022.txt"
 
@@ -17,7 +17,7 @@ class AppMainTest {
     UV
 
     //    TopN
-  }
+//  }
 
 }
 
@@ -48,27 +48,30 @@ object PV extends AppMainTest {
 
 object UV extends AppMainTest {
 
-  try {
+  def main(args: Array[String]): Unit = {
 
-    val sparkConf: SparkConf = new SparkConf().setAppName("UV").setMaster("local[2]")
+    try {
 
-    val sparkContext: SparkContext = new SparkContext(sparkConf)
+      val sparkConf: SparkConf = new SparkConf().setAppName("UV").setMaster("local[2]")
 
-    sparkContext.setLogLevel("WARN")
+      val sparkContext: SparkContext = new SparkContext(sparkConf)
 
-    val dataRDD: RDD[String] = sparkContext.textFile("/Users/lionyan/Desktop/SparkDemo/20190814.txt")
+      sparkContext.setLogLevel("WARN")
 
-    val ips: RDD[String] = dataRDD.map(_.split("http")(0))
+      val dataRDD: RDD[String] = sparkContext.textFile("/Users/lionyan/Desktop/SparkDemo/20190814.txt")
 
-    val ipNum: Long = ips.distinct().count()
+      val ips: RDD[String] = dataRDD.map(_.split("http")(0))
 
-    println(ipNum)
-  } catch {
-    case ex: FileNotFoundException => {
-      println("Missing file exception")
-    }
-    case ex: IOException => {
-      println("IO Exception")
+      val ipNum: Long = ips.distinct().count()
+
+      println(ipNum)
+    } catch {
+      case ex: FileNotFoundException => {
+        println("Missing file exception")
+      }
+      case ex: IOException => {
+        println("IO Exception")
+      }
     }
   }
   //  sparkContext.stop()
